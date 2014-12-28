@@ -1,4 +1,4 @@
 ca-sorel-varennes-citsv-bus-parser
 ==================================
 
-Parser for Sorel-Varennes CITSV Bus data
+Parser for CIT Sorel-Varennes Bus data
