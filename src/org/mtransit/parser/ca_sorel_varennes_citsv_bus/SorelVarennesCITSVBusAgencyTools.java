@@ -1,9 +1,13 @@
 package org.mtransit.parser.ca_sorel_varennes_citsv_bus;
 
+import java.util.HashSet;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.Utils;
+import org.mtransit.parser.gtfs.data.GCalendar;
+import org.mtransit.parser.gtfs.data.GCalendarDate;
 import org.mtransit.parser.gtfs.data.GRoute;
 import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.gtfs.data.GTrip;
@@ -27,12 +31,39 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 		new SorelVarennesCITSVBusAgencyTools().start(args);
 	}
 
+	private HashSet<String> serviceIds;
+
 	@Override
 	public void start(String[] args) {
 		System.out.printf("Generating CITSV bus data...\n");
 		long start = System.currentTimeMillis();
+		this.serviceIds = extractUsefulServiceIds(args, this);
 		super.start(args);
 		System.out.printf("Generating CITSV bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
+	}
+
+	@Override
+	public boolean excludeCalendar(GCalendar gCalendar) {
+		if (this.serviceIds != null) {
+			return excludeUselessCalendar(gCalendar, this.serviceIds);
+		}
+		return super.excludeCalendar(gCalendar);
+	}
+
+	@Override
+	public boolean excludeCalendarDate(GCalendarDate gCalendarDates) {
+		if (this.serviceIds != null) {
+			return excludeUselessCalendarDate(gCalendarDates, this.serviceIds);
+		}
+		return super.excludeCalendarDate(gCalendarDates);
+	}
+
+	@Override
+	public boolean excludeTrip(GTrip gTrip) {
+		if (this.serviceIds != null) {
+			return excludeUselessTrip(gTrip, this.serviceIds);
+		}
+		return super.excludeTrip(gTrip);
 	}
 
 	@Override
@@ -106,43 +137,50 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public String getStopCode(GStop gStop) {
 		if ("0".equals(gStop.stop_code)) {
-			if ("BOU29C".equals(gStop.stop_id)) {
-				return "77029";
-			} else if ("BOU30A".equals(gStop.stop_id)) {
-				return "77030";
-			} else if ("BOU30C".equals(gStop.stop_id)) {
-				return "77130";
-			} else if ("LON6A".equals(gStop.stop_id)) {
-				return "77060";
-			} else if ("LON6C".equals(gStop.stop_id)) {
-				return "77160";
-			} else if ("LON30A".equals(gStop.stop_id)) {
-				return "77530";
-			} else if ("LON30C".equals(gStop.stop_id)) {
-				return "77630";
-			} else if ("LON219A".equals(gStop.stop_id)) {
-				return "77219";
-			} else if ("LON242C".equals(gStop.stop_id)) {
-				return "77242";
-			} else if ("VAR109B".equals(gStop.stop_id)) {
-				return "77109";
-			} else if ("VAR146A".equals(gStop.stop_id)) {
-				return "77146";
-			} else if ("SAM77A".equals(gStop.stop_id)) {
-				return "77077";
-			} else if ("SAM77C".equals(gStop.stop_id)) {
-				return "77177";
-			} else {
-				System.out.println("Stop doesn't have an ID! " + gStop);
-				System.exit(-1);
-			}
+			return null;
 		}
 		return super.getStopCode(gStop);
 	}
 
+	private static final Pattern DIGITS = Pattern.compile("[\\d]+");
+
 	@Override
 	public int getStopId(GStop gStop) {
-		return Integer.valueOf(getStopCode(gStop)); // using stop code as stop ID
+		String stopCode = getStopCode(gStop);
+		if (stopCode != null && stopCode.length() > 0) {
+			return Integer.valueOf(stopCode); // using stop code as stop ID
+		}
+		// generating integer stop ID
+		Matcher matcher = DIGITS.matcher(gStop.stop_id);
+		matcher.find();
+		int digits = Integer.parseInt(matcher.group());
+		int stopId;
+		if (gStop.stop_id.startsWith("BOU")) {
+			stopId = 100000;
+		} else if (gStop.stop_id.startsWith("LON")) {
+			stopId = 200000;
+		} else if (gStop.stop_id.startsWith("VAR")) {
+			stopId = 300000;
+		} else if (gStop.stop_id.startsWith("SAM")) {
+			stopId = 400000;
+		} else {
+			System.out.println("Stop doesn't have an ID (start with)! " + gStop);
+			System.exit(-1);
+			stopId = -1;
+		}
+		if (gStop.stop_id.endsWith("A")) {
+			stopId += 1000;
+		} else if (gStop.stop_id.endsWith("B")) {
+			stopId += 2000;
+		} else if (gStop.stop_id.endsWith("C")) {
+			stopId += 3000;
+		} else if (gStop.stop_id.endsWith("D")) {
+			stopId += 4000;
+		} else {
+			System.out.println("Stop doesn't have an ID (end with)! " + gStop);
+			System.exit(-1);
+		}
+		return stopId + digits;
 	}
 
 }
