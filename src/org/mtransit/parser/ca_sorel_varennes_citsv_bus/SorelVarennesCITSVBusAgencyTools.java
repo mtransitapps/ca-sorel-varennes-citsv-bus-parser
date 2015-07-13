@@ -35,7 +35,7 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public void start(String[] args) {
-		System.out.printf("\nGenerating CITSV bus data...\n");
+		System.out.printf("\nGenerating CITSV bus data...");
 		long start = System.currentTimeMillis();
 		this.serviceIds = extractUsefulServiceIds(args, this);
 		super.start(args);
