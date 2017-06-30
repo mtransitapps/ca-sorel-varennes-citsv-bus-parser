@@ -17,8 +17,8 @@ import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.mt.data.MTrip;
 
-// https://amt.qc.ca/en/about/open-data
-// http://www.amt.qc.ca/xdata/citsv/google_transit.zip
+// https://rtm.quebec/en/about/open-data
+// https://rtm.quebec/xdata/citsv/google_transit.zip
 public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(String[] args) {
@@ -162,6 +162,8 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 				stopId = 300000;
 			} else if (gStop.getStopId().startsWith("SAM")) {
 				stopId = 400000;
+			} else if (gStop.getStopId().startsWith("VCH")) {
+				stopId = 500000;
 			} else {
 				System.out.printf("\nStop doesn't have an ID (start with) %s!\n", gStop);
 				System.exit(-1);
