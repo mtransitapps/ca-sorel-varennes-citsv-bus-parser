@@ -112,6 +112,13 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 		return CleanUtils.cleanLabelFR(tripHeadsign);
 	}
 
+	@Override
+	public boolean mergeHeadsign(MTrip mTrip, MTrip mTripToMerge) {
+		System.out.printf("\nUnexpected trips to merge: %s & %s!\n", mTrip, mTripToMerge);
+		System.exit(-1);
+		return false;
+	}
+
 	private static final Pattern START_WITH_FACE_A = Pattern.compile("^(face à )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 	private static final Pattern START_WITH_FACE_AU = Pattern.compile("^(face au )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 	private static final Pattern START_WITH_FACE = Pattern.compile("^(face )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
@@ -164,6 +171,8 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 				stopId = 400000;
 			} else if (gStop.getStopId().startsWith("VCH")) {
 				stopId = 500000;
+			} else if (gStop.getStopId().startsWith("CON")) {
+				stopId = 600000;
 			} else {
 				System.out.printf("\nStop doesn't have an ID (start with) %s!\n", gStop);
 				System.exit(-1);
