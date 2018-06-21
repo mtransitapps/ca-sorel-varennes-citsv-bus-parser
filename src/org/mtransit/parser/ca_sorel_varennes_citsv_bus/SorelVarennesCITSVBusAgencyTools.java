@@ -154,7 +154,7 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public int getStopId(GStop gStop) {
 		String stopCode = getStopCode(gStop);
-		if (stopCode != null && stopCode.length() > 0) {
+		if (stopCode != null && stopCode.length() > 0 && Utils.isDigitsOnly(stopCode)) {
 			return Integer.valueOf(stopCode); // using stop code as stop ID
 		}
 		Matcher matcher = DIGITS.matcher(gStop.getStopId());
@@ -173,6 +173,8 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 				stopId = 500000;
 			} else if (gStop.getStopId().startsWith("CON")) {
 				stopId = 600000;
+			} else if (gStop.getStopId().startsWith("LON")) {
+				stopId = 700000;
 			} else {
 				System.out.printf("\nStop doesn't have an ID (start with) %s!\n", gStop);
 				System.exit(-1);
