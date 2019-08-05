@@ -1,6 +1,8 @@
 package org.mtransit.parser.ca_sorel_varennes_citsv_bus;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -119,6 +121,16 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public boolean mergeHeadsign(MTrip mTrip, MTrip mTripToMerge) {
+		List<String> headsignsValues = Arrays.asList(mTrip.getHeadsignValue(), mTripToMerge.getHeadsignValue());
+		if (mTrip.getRouteId() == 370L) {
+			if (Arrays.asList( //
+					"St-Amable", //
+					"Ste-Julie" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Ste-Julie", mTrip.getHeadsignId());
+				return true;
+			}
+		}
 		System.out.printf("\nUnexpected trips to merge: %s & %s!\n", mTrip, mTripToMerge);
 		System.exit(-1);
 		return false;
