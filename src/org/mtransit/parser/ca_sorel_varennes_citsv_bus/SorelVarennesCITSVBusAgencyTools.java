@@ -1,12 +1,18 @@
 package org.mtransit.parser.ca_sorel_varennes_citsv_bus;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.DefaultAgencyTools;
+import org.mtransit.parser.Pair;
+import org.mtransit.parser.SplitUtils;
+import org.mtransit.parser.SplitUtils.RouteTripSpec;
 import org.mtransit.parser.Utils;
 import org.mtransit.parser.gtfs.data.GCalendar;
 import org.mtransit.parser.gtfs.data.GCalendarDate;
@@ -14,10 +20,11 @@ import org.mtransit.parser.gtfs.data.GRoute;
 import org.mtransit.parser.gtfs.data.GSpec;
 import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.gtfs.data.GTrip;
+import org.mtransit.parser.gtfs.data.GTripStop;
 import org.mtransit.parser.mt.data.MAgency;
 import org.mtransit.parser.mt.data.MRoute;
-import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.mt.data.MTrip;
+import org.mtransit.parser.mt.data.MTripStop;
 
 // https://rtm.quebec/en/about/open-data
 // https://rtm.quebec/xdata/citsv/google_transit.zip
@@ -104,8 +111,41 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 		return AGENCY_COLOR;
 	}
 
+	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
+	static {
+		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
+		ALL_ROUTE_TRIPS2 = map2;
+	}
+
+	@Override
+	public int compareEarly(long routeId, List<MTripStop> list1, List<MTripStop> list2, MTripStop ts1, MTripStop ts2, GStop ts1GStop, GStop ts2GStop) {
+		if (ALL_ROUTE_TRIPS2.containsKey(routeId)) {
+			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop, this);
+		}
+		return super.compareEarly(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
+	}
+
+	@Override
+	public ArrayList<MTrip> splitTrip(MRoute mRoute, GTrip gTrip, GSpec gtfs) {
+		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
+			return ALL_ROUTE_TRIPS2.get(mRoute.getId()).getAllTrips();
+		}
+		return super.splitTrip(mRoute, gTrip, gtfs);
+	}
+
+	@Override
+	public Pair<Long[], Integer[]> splitTripStop(MRoute mRoute, GTrip gTrip, GTripStop gTripStop, ArrayList<MTrip> splitTrips, GSpec routeGTFS) {
+		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
+			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()), this);
+		}
+		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
+	}
+
 	@Override
 	public void setTripHeadsign(MRoute mRoute, MTrip mTrip, GTrip gTrip, GSpec gtfs) {
+		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
+			return; // split
+		}
 		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
 	}
 
@@ -125,9 +165,115 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 		if (mTrip.getRouteId() == 370L) {
 			if (Arrays.asList( //
 					"St-Amable", //
-					"Ste-Julie" //
+					"Ste-Julie", //
+					"Nord" //
 			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Ste-Julie", mTrip.getHeadsignId());
+				mTrip.setHeadsignString("Nord", mTrip.getHeadsignId());
+				return true;
+			}
+		}
+		if (mTrip.getRouteId() == 700L) {
+			if (Arrays.asList( //
+					"Sorel-Tracy", //
+					"Nord" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Nord", mTrip.getHeadsignId());
+				return true;
+			}
+			if (Arrays.asList( //
+					"Longueuil", //
+					"Sud" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Sud", mTrip.getHeadsignId());
+				return true;
+			}
+		}
+		if (mTrip.getRouteId() == 720L) {
+			if (Arrays.asList( //
+					"Varennes", //
+					"Nord" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Nord", mTrip.getHeadsignId());
+				return true;
+			}
+			if (Arrays.asList( //
+					"Longueuil", //
+					"Sud" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Sud", mTrip.getHeadsignId());
+				return true;
+			}
+		}
+		if (mTrip.getRouteId() == 721L) {
+			if (Arrays.asList( //
+					"Varennes", //
+					"Nord" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Nord", mTrip.getHeadsignId());
+				return true;
+			}
+			if (Arrays.asList( //
+					"Longueuil", //
+					"Sud" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Sud", mTrip.getHeadsignId());
+				return true;
+			}
+		}
+		if (mTrip.getRouteId() == 722L) {
+			if (Arrays.asList( //
+					"Varennes", //
+					"Nord" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Nord", mTrip.getHeadsignId());
+				return true;
+			}
+			if (Arrays.asList( //
+					"Longueuil", //
+					"Sud" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Sud", mTrip.getHeadsignId());
+				return true;
+			}
+		}
+		if (mTrip.getRouteId() == 723L) {
+			if (Arrays.asList( //
+					"Varennes (IREQ)", //
+					"Nord" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Nord", mTrip.getHeadsignId());
+				return true;
+			}
+			if (Arrays.asList( //
+					"Longueuil", //
+					"Sud" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Sud", mTrip.getHeadsignId());
+				return true;
+			}
+		}
+		if (mTrip.getRouteId() == 724L) {
+			if (Arrays.asList( //
+					"Varennes", //
+					"Nord" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Nord", mTrip.getHeadsignId());
+				return true;
+			}
+			if (Arrays.asList( //
+					"Longueuil", //
+					"Sud" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Sud", mTrip.getHeadsignId());
+				return true;
+			}
+		}
+		if (mTrip.getRouteId() == 731L) {
+			if (Arrays.asList( //
+					"Longueuil", //
+					"Sud" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Sud", mTrip.getHeadsignId());
 				return true;
 			}
 		}
