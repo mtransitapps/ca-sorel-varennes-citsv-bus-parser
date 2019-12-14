@@ -174,17 +174,10 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 		}
 		if (mTrip.getRouteId() == 700L) {
 			if (Arrays.asList( //
-					"Sorel-Tracy", //
-					"Nord" //
+					"Longueuil", // <>
+					"Sorel-Tracy" //
 			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Nord", mTrip.getHeadsignId());
-				return true;
-			}
-			if (Arrays.asList( //
-					"Longueuil", //
-					"Sud" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Sud", mTrip.getHeadsignId());
+				mTrip.setHeadsignString("Sorel-Tracy", mTrip.getHeadsignId());
 				return true;
 			}
 		}
