@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.DefaultAgencyTools;
+import org.mtransit.parser.MTLog;
 import org.mtransit.parser.Pair;
 import org.mtransit.parser.SplitUtils;
 import org.mtransit.parser.SplitUtils.RouteTripSpec;
@@ -26,8 +27,8 @@ import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.mt.data.MTrip;
 import org.mtransit.parser.mt.data.MTripStop;
 
-// https://rtm.quebec/en/about/open-data
-// https://rtm.quebec/xdata/citsv/google_transit.zip
+// https://exo.quebec/en/about/open-data
+// https://exo.quebec/xdata/citsv/google_transit.zip
 public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(String[] args) {
@@ -44,11 +45,11 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public void start(String[] args) {
-		System.out.printf("\nGenerating CITSV bus data...");
+		MTLog.log("Generating CITSV bus data...");
 		long start = System.currentTimeMillis();
 		this.serviceIds = extractUsefulServiceIds(args, this);
 		super.start(args);
-		System.out.printf("\nGenerating CITSV bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
+		MTLog.log("Generating CITSV bus data... DONE in %s.", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
 	@Override
@@ -111,9 +112,9 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 		return AGENCY_COLOR;
 	}
 
-	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
+	private static final HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
-		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
+		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
 		ALL_ROUTE_TRIPS2 = map2;
 	}
 
@@ -146,7 +147,10 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
 			return; // split
 		}
-		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
+		mTrip.setHeadsignString(
+			cleanTripHeadsign(gTrip.getTripHeadsign()),
+			gTrip.getDirectionIdOrDefault()
+		);
 	}
 
 	private static final Pattern DIRECTION = Pattern.compile("(direction )", Pattern.CASE_INSENSITIVE);
@@ -270,16 +274,14 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 				return true;
 			}
 		}
-		System.out.printf("\nUnexpected trips to merge: %s & %s!\n", mTrip, mTripToMerge);
-		System.exit(-1);
-		return false;
+		throw new MTLog.Fatal("Unexpected trips to merge: %s & %s!", mTrip, mTripToMerge);
 	}
 
-	private static final Pattern START_WITH_FACE_A = Pattern.compile("^(face à )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+	private static final Pattern START_WITH_FACE_A = Pattern.compile("^(face à )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.CANON_EQ);
 	private static final Pattern START_WITH_FACE_AU = Pattern.compile("^(face au )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 	private static final Pattern START_WITH_FACE = Pattern.compile("^(face )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-	private static final Pattern SPACE_FACE_A = Pattern.compile("( face à )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+	private static final Pattern SPACE_FACE_A = Pattern.compile("( face à )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.CANON_EQ);
 	private static final Pattern SPACE_WITH_FACE_AU = Pattern.compile("( face au )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 	private static final Pattern SPACE_WITH_FACE = Pattern.compile("( face )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
@@ -329,12 +331,8 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 				stopId = 500000;
 			} else if (gStop.getStopId().startsWith("CON")) {
 				stopId = 600000;
-			} else if (gStop.getStopId().startsWith("LON")) {
-				stopId = 700000;
 			} else {
-				System.out.printf("\nStop doesn't have an ID (start with) %s!\n", gStop);
-				System.exit(-1);
-				return -1;
+				throw new MTLog.Fatal("Stop doesn't have an ID (start with) %s!", gStop);
 			}
 			if (gStop.getStopId().endsWith("A")) {
 				stopId += 1000;
@@ -345,15 +343,11 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 			} else if (gStop.getStopId().endsWith("D")) {
 				stopId += 4000;
 			} else {
-				System.out.printf("\nStop doesn't have an ID (end with) %s!\n", gStop);
-				System.exit(-1);
-				return -1;
+				throw new MTLog.Fatal("Stop doesn't have an ID (end with) %s!", gStop);
 			}
 			return stopId + digits;
 		} else {
-			System.out.printf("\nUnexpected stop ID %s!\n", gStop);
-			System.exit(-1);
-			return -1;
+			throw new MTLog.Fatal("Unexpected stop ID %s!", gStop);
 		}
 	}
 }
