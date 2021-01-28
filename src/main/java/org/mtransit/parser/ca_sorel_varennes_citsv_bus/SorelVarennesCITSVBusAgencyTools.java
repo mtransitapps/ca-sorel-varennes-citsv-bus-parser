@@ -8,7 +8,6 @@ import org.mtransit.parser.MTLog;
 import org.mtransit.parser.Pair;
 import org.mtransit.parser.SplitUtils;
 import org.mtransit.parser.SplitUtils.RouteTripSpec;
-import org.mtransit.parser.StringUtils;
 import org.mtransit.parser.Utils;
 import org.mtransit.parser.gtfs.data.GCalendar;
 import org.mtransit.parser.gtfs.data.GCalendarDate;
@@ -27,8 +26,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.mtransit.parser.Constants.SPACE_;
+import static org.mtransit.parser.StringUtils.EMPTY;
 
 // https://exo.quebec/en/about/open-data
 // https://exo.quebec/xdata/citsv/google_transit.zip
@@ -168,10 +171,23 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 	private static final Pattern DIRECTION = Pattern.compile("(direction )", Pattern.CASE_INSENSITIVE);
 	private static final String DIRECTION_REPLACEMENT = "";
 
+	private static final Pattern SERVICE_LOCAL = Pattern.compile("(service local)", Pattern.CASE_INSENSITIVE);
+
+	private static final Pattern EXPRESS_ = CleanUtils.cleanWordsFR("express");
+
+	private static final Pattern _DASH_ = Pattern.compile("( - )");
+	private static final String _DASH_REPLACEMENT = "<>"; // form<>to
+
 	@NotNull
 	@Override
 	public String cleanTripHeadsign(@NotNull String tripHeadsign) {
 		tripHeadsign = DIRECTION.matcher(tripHeadsign).replaceAll(DIRECTION_REPLACEMENT);
+		tripHeadsign = _DASH_.matcher(tripHeadsign).replaceAll(_DASH_REPLACEMENT); // from - to => form<>to
+		tripHeadsign = EXPRESS_.matcher(tripHeadsign).replaceAll(EMPTY);
+		tripHeadsign = DEVANT_.matcher(tripHeadsign).replaceAll(EMPTY);
+		tripHeadsign = DIRECTION.matcher(tripHeadsign).replaceAll(EMPTY);
+		tripHeadsign = SERVICE_LOCAL.matcher(tripHeadsign).replaceAll(EMPTY);
+		tripHeadsign = CleanUtils.cleanBounds(Locale.FRENCH, tripHeadsign);
 		tripHeadsign = CleanUtils.cleanStreetTypesFRCA(tripHeadsign);
 		return CleanUtils.cleanLabelFR(tripHeadsign);
 	}
@@ -302,11 +318,16 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 
 	private static final Pattern[] SPACE_FACES = new Pattern[]{SPACE_FACE_A, SPACE_WITH_FACE_AU, SPACE_WITH_FACE};
 
+	private static final Pattern DEVANT_ = CleanUtils.cleanWordsFR("devant");
+
 	@NotNull
 	@Override
 	public String cleanStopName(@NotNull String gStopName) {
+		gStopName = _DASH_.matcher(gStopName).replaceAll(SPACE_);
+		gStopName = DEVANT_.matcher(gStopName).replaceAll(EMPTY);
 		gStopName = Utils.replaceAll(gStopName, START_WITH_FACES, CleanUtils.SPACE);
 		gStopName = Utils.replaceAll(gStopName, SPACE_FACES, CleanUtils.SPACE);
+		gStopName = CleanUtils.cleanBounds(Locale.FRENCH, gStopName);
 		gStopName = CleanUtils.cleanStreetTypesFRCA(gStopName);
 		return CleanUtils.cleanLabelFR(gStopName);
 	}
@@ -317,7 +338,7 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public String getStopCode(@NotNull GStop gStop) {
 		if (ZERO.equals(gStop.getStopCode())) {
-			return StringUtils.EMPTY;
+			return EMPTY;
 		}
 		return super.getStopCode(gStop);
 	}
