@@ -11,6 +11,7 @@ import org.mtransit.commons.CleanUtils;
 import org.mtransit.commons.RegexUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
+import org.mtransit.parser.gtfs.data.GRoute;
 import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.mt.data.MAgency;
 
@@ -20,7 +21,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 // https://exo.quebec/en/about/open-data
-// https://exo.quebec/xdata/citsv/google_transit.zip
 public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(@NotNull String[] args) {
@@ -58,6 +58,12 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public boolean useRouteShortNameForRouteId() {
 		return true;
+	}
+
+	@NotNull
+	@Override
+	public String getRouteShortName(@NotNull GRoute gRoute) {
+		return gRoute.getRouteShortName(); // used by GTFS-RT
 	}
 
 	@Override
@@ -136,7 +142,8 @@ public class SorelVarennesCITSVBusAgencyTools extends DefaultAgencyTools {
 		if (ZERO.equals(gStop.getStopCode())) {
 			return EMPTY;
 		}
-		return super.getStopCode(gStop);
+		//noinspection deprecation
+		return gStop.getStopId(); // used by GTFS-RT
 	}
 
 	@Override
